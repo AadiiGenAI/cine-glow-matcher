@@ -8,7 +8,7 @@ const FilmReelScene = lazy(() =>
 export function HeroScreen({ onStart }: { onStart: () => void }) {
   return (
     <section className="relative flex min-h-screen flex-col items-center justify-center px-6 py-16 text-center">
-      <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-80">
+      <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-40">
         <div className="h-[30rem] w-full max-w-3xl">
           <Suspense fallback={null}>
             <FilmReelScene />
