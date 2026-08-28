@@ -1,24 +1,63 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { AnimatePresence, motion } from "framer-motion";
+import { useEffect, useState } from "react";
+import { AnimatedBackground } from "@/components/AnimatedBackground";
+import { HeroScreen } from "@/components/HeroScreen";
+import { LoadingScreen } from "@/components/LoadingScreen";
+import { RatingScreen } from "@/components/RatingScreen";
+import { ResultsScreen } from "@/components/ResultsScreen";
 
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
 export const Route = createFileRoute("/")({
-  component: Index,
+  ssr: false,
+  head: () => ({
+    meta: [
+      { title: "CineMatch — Rate a few. Discover your next favorite." },
+      {
+        name: "description",
+        content:
+          "CineMatch is a cinematic movie recommendation experience: rate a handful of films and get your top 10 personalized matches.",
+      },
+      { property: "og:title", content: "CineMatch — Discover your next favorite film" },
+      {
+        property: "og:description",
+        content: "Rate a few movies and get 10 personalized, ranked recommendations.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+  }),
+  component: CineMatch,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
-function Index() {
+type Screen = "hero" | "rating" | "loading" | "results";
+
+const pageTransition = {
+  initial: { opacity: 0, y: 24, filter: "blur(12px)" },
+  animate: { opacity: 1, y: 0, filter: "blur(0px)" },
+  exit: { opacity: 0, y: -24, filter: "blur(12px)" },
+  transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] as const },
+};
+
+function CineMatch() {
+  const [screen, setScreen] = useState<Screen>("hero");
+
+  useEffect(() => {
+    if (screen !== "loading") return;
+    const t = setTimeout(() => setScreen("results"), 1900);
+    return () => clearTimeout(t);
+  }, [screen]);
+
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
-    </div>
+    <main className="relative min-h-screen overflow-x-hidden text-foreground">
+      <AnimatedBackground />
+      <AnimatePresence mode="wait">
+        <motion.div key={screen} {...pageTransition}>
+          {screen === "hero" && <HeroScreen onStart={() => setScreen("rating")} />}
+          {screen === "rating" && <RatingScreen onComplete={() => setScreen("loading")} />}
+          {screen === "loading" && <LoadingScreen />}
+          {screen === "results" && <ResultsScreen onRestart={() => setScreen("rating")} />}
+        </motion.div>
+      </AnimatePresence>
+    </main>
   );
 }
